@@ -28,24 +28,6 @@
             "gltf_detailedDescription": "The stride, in bytes, between vertex attributes or other interleavable data.  When this is zero, data is tightly packed.",
             "gltf_webgl": "`vertexAttribPointer()` stride parameter"
         },
-        "target": {
-            "description": "The target that the WebGL buffer should be bound to.",
-            "gltf_detailedDescription": "The target that the WebGL buffer should be bound to.  All valid values correspond to WebGL enums.  When this is not provided, the bufferView contains animation or skin data.",
-            "gltf_webgl": "`bindBuffer()`",
-            "anyOf": [
-                {
-                    "enum": [ 34962 ],
-                    "description": "ARRAY_BUFFER"
-                },
-                {
-                    "enum": [ 34963 ],
-                    "description": "ELEMENT_ARRAY_BUFFER"
-                },
-                {
-                    "type": "integer"
-                }
-            ]
-        },
         "name": { },
         "extensions": { },
         "extras": { }
