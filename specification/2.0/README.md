@@ -69,11 +69,18 @@ Copyright (C) 2013-2017 The Khronos Group Inc. All Rights Reserved. glTF is a tr
   * [Animations](#animations)
   * [Specifying Extensions](#specifying-extensions)
 * [Properties Reference](#properties-reference)
+* [GLB File Format Specification](#glb-file-format-specification)
+    * [File Extension](#file-extension)
+    * [MIME Type](#mime-type)
+  * [Binary glTF Layout](#binary-gltf-layout)
+    * [Header](#header)
+    * [Chunks](#chunks)
+      * [Structured JSON Content](#structured-json-content)
+      * [Binary Buffer](#binary-buffer)
 * [Acknowledgments](#acknowledgments)
-* [Appendix A: GLB File Format Specification](#appendix-a-glb-file-format-specification)
-* [Appendix B: Tangent Space Recalculation](#appendix-b-tangent-space-recalculation)
-* [Appendix C: BRDF Implementation](#appendix-c-brdf-implementation)
-* [Appendix D: Full Khronos Trademark Statement](#appendix-d-full-khronos-trademark-statement)
+* [Appendix A: Tangent Space Recalculation](#appendix-A-tangent-space-recalculation)
+* [Appendix B: BRDF Implementation](#appendix-B-brdf-implementation)
+* [Appendix C: Full Khronos Trademark Statement](#appendix-C-full-khronos-trademark-statement)
 
 # Introduction
 
@@ -185,7 +192,7 @@ Each glTF asset must have an `asset` property. In fact, it's the only required t
 }
 ```
 
-> **Implementation Note:** Client implementations should first check whether a `minVersion` property is specified and ensure both major and minor versions can be supported. If no `minVersion` is specified, then clients should check the `version` property and ensure the major version is supported. Clients that load [GLB format](GLB_FORMAT.md) should also check for the `minVersion` and `version` properties in the JSON chunk as the version specified in the GLB header only refers to the GLB container version.
+> **Implementation Note:** Client implementations should first check whether a `minVersion` property is specified and ensure both major and minor versions can be supported. If no `minVersion` is specified, then clients should check the `version` property and ensure the major version is supported. Clients that load [GLB format](#glb-file-format-specification) should also check for the `minVersion` and `version` properties in the JSON chunk as the version specified in the GLB header only refers to the GLB container version.
 
 
 ## Indices and Names
@@ -435,7 +442,7 @@ glTF asset could use GLB file container to pack all resources into one file. glT
 }
 ```
 
-See [Appendix A](#appendix-a-glb-file-format-specification) for details on GLB File Format.
+See [GLB File Format Specification](#glb-file-format-specification) for details on GLB File Format.
 
 ### Accessors
 
@@ -723,7 +730,7 @@ The following example extends the Mesh defined in the previous example to a morp
 }
 ```
 
-After applying morph targets to vertex positions and normals, tangent space must be recalculated. See [Appendix B](#appendix-b-tangent-space-recalculation) for details.
+After applying morph targets to vertex positions and normals, tangent space must be recalculated. See [Appendix A](#appendix-a-tangent-space-recalculation) for details.
 
 ### Skins
 
@@ -1000,7 +1007,7 @@ The following equations show how to calculate bidirectional reflectance distribu
 <br>
 *&alpha;* = `roughness ^ 2`
 
-All implementations should use the same calculations for the BRDF inputs. Implementations of the BRDF itself can vary based on device performance and resource constraints. See [Appendix C](#appendix-c-brdf-implementation) for more details on the BRDF calculations.
+All implementations should use the same calculations for the BRDF inputs. Implementations of the BRDF itself can vary based on device performance and resource constraints. See [Appendix B](#appendix-b-brdf-implementation) for more details on the BRDF calculations.
 
 ### Additional Maps
 
@@ -3392,6 +3399,105 @@ Application-specific data.
 * **Type**: `any`
 * **Required**: No
 
+# GLB File Format Specification
+
+*Version 2.0*
+
+glTF provides two delivery options that can also be used together:
+
+* glTF JSON points to external binary data (geometry, key frames, skins), and images.
+* glTF JSON embeds base64-encoded binary data, and images inline using data URIs.
+
+For these resources, glTF requires either separate requests or extra space due to base64-encoding. Base64-encoding requires extra processing to decode and increases the file size (by ~33% for encoded resources). While gzip mitigates the file size increase, decompression and decoding still add significant loading time.
+
+To solve this, a container format, _Binary glTF_ is introduced. In Binary glTF, a glTF asset (JSON, .bin, and images) can be stored in a binary blob. 
+
+This binary blob (which can be a file, for example) has the following structure:
+* A 12-byte preamble, entitled the `header`.
+* One or more `chunks` that contains JSON content and binary data.
+
+The `chunk` containing JSON can refer to external resources as usual, and can also reference resources stored within other `chunks`.
+
+For example, an application that wants to download textures on demand may embed everything except images in the Binary glTF. Embedded base64-encoded resources are also still supported, but it would be inefficient to use them.
+
+### File Extension
+
+The file extension to be used with Binary glTF is `.glb`.
+
+### MIME Type
+
+Use `model/gltf.binary`.
+
+## Binary glTF Layout
+
+Binary glTF is little endian. Figure 1 shows an example of a Binary glTF asset.
+
+**Figure 1**: Binary glTF layout.
+
+![](figures/glb2.png)
+
+The following sections describe the structure more in detail.
+
+### Header
+
+The 12-byte header consists of three 4-byte entries:
+
+```
+uint32 magic
+uint32 version
+uint32 length
+```
+
+* `magic` equals `0x46546C67`. It is ASCII string `glTF`, and can be used to identify data as Binary glTF.
+
+* `version` indicates the version of the Binary glTF container format. This specification defines version 2.
+
+* `length` is the total length of the Binary glTF, including Header and all Chunks, in bytes.
+
+> **Implementation Note:** Client implementations that load GLB format should also check for the [asset version properties](readme.md#asset) in the JSON chunk, as the version specified in the GLB header only refers to the GLB container version.
+
+### Chunks
+
+Each chunk has the following structure:
+```
+uint32 chunkLength
+uint32 chunkType
+ubyte[] chunkData
+```
+
+* `chunkLength` is the length of `chunkData`, in bytes.
+
+* `chunkType` indicates the type of chunk. See Table 1 for details.
+
+* `chunkData` is a binary payload of chunk.
+
+The start and the end of each chunk must be aligned to 4-byte boundary. See chunks definitions for padding schemes. Chunks must appear in exactly the order given in the Table 1.
+
+**Table 1**: Chunk types
+
+|  | Chunk Type | ASCII | Description | Occurrences |
+|----|------------|-------|-------------------------|-------------|
+| 1. | 0x4E4F534A | JSON | Structured JSON content | 1 |
+| 2. | 0x004E4942 | BIN | Binary buffer | 0 or 1 |
+
+ Clients must ignore chunks with unknown types.
+ 
+#### Structured JSON Content
+
+This chunk holds the structured glTF content description, as it would be provided within a .gltf file.
+
+> **Implementation Note:** In a JavaScript implementation, the `TextDecoder` API can be used to extract the glTF content from the ArrayBuffer, and then the JSON can be parsed with `JSON.parse` as usual.
+
+This chunk must be the very first chunk of Binary glTF asset. By reading this chunk first, an implementation is able to progressively retrieve resources from subsequent chunks. This way, it is also possible to read only a selected subset of resources from a Binary glTF asset (for instance, the coarsest LOD of a mesh).
+
+This chunk must be padded with trailing `Space` chars (`0x20`) to satisfy alignment requirements.  
+
+#### Binary buffer
+
+This chunk contains the binary payload for geometry, animation key frames, skins, and images. See glTF specification for details on referencing this chunk from JSON.
+
+This chunk must be padded with trailing zeros (`0x00`) to satisfy alignment requirements.
+
 
 # Acknowledgments
 
@@ -3409,18 +3515,14 @@ Application-specific data.
 * Corentin Wallez,
 * Yu Chen Hou
 
-# Appendix A: GLB File Format Specification
-
-See [GLB_FORMAT.md](GLB_FORMAT.md).
-
-# Appendix B: Tangent Space Recalculation
+# Appendix A: Tangent Space Recalculation
 
 **TODO**
 
-# Appendix C: BRDF Implementation
+# Appendix B: BRDF Implementation
 
 **TODO**
 
-# Appendix D: Full Khronos Trademark Statement
+# Appendix C: Full Khronos Trademark Statement
 
 Copyright (C) 2013-2017 The Khronos Group Inc. All Rights Reserved. This specification is protected by copyright laws and contains material proprietary to the Khronos Group, Inc. It or any components may not be reproduced, republished, distributed, transmitted, displayed, broadcast, or otherwise exploited in any manner without the express prior written permission of Khronos Group. You may use this specification for implementing the functionality therein, without altering or removing any trademark, copyright or other notice from the specification, but the receipt or possession of this specification does not convey any rights to reproduce, disclose, or distribute its contents, or to manufacture, use, or sell anything that it may describe, in whole or in part. Khronos Group grants express permission to any current Promoter, Contributor or Adopter member of Khronos to copy and redistribute UNMODIFIED versions of this specification in any fashion, provided that NO CHARGE is made for the specification and the latest available update of the specification for any version of the API is used whenever possible. Such distributed specification may be reformatted AS LONG AS the contents of the specification are not changed in any way. The specification may be incorporated into a product that is sold as long as such product includes significant independent work developed by the seller. A link to the current version of this specification on the Khronos Group website should be included whenever possible with specification distributions. Khronos Group makes no, and expressly disclaims any, representations or warranties, express or implied, regarding this specification, including, without limitation, any implied warranties of merchantability or fitness for a particular purpose or non-infringement of any intellectual property. Khronos Group makes no, and expressly disclaims any, warranties, express or implied, regarding the correctness, accuracy, completeness, timeliness, and reliability of the specification. Under no circumstances will the Khronos Group, or any of its Promoters, Contributors or Members or their respective partners, officers, directors, employees, agents, or representatives be liable for any damages, whether direct, indirect, special or consequential damages for lost revenues, lost profits, or otherwise, arising from or in connection with these materials. Khronos, Vulkan, SYCL, SPIR, WebGL, EGL, COLLADA, StreamInput, OpenVX, OpenKCam, glTF, OpenKODE, OpenVG, OpenWF, OpenSL ES, OpenMAX, OpenMAX AL, OpenMAX IL and OpenMAX DL are trademarks and WebCL is a certification mark of The Khronos Group Inc. OpenCL is a trademark of Apple Inc. and OpenGL and OpenML are registered trademarks and the OpenGL ES and OpenGL SC logos are trademarks of Silicon Graphics International used under license by Khronos. All other product names, trademarks, and/or company names are used solely for identification and belong to their respective owners.
