@@ -797,8 +797,6 @@ The number of joints that influence one vertex is limited to 4, so referenced ac
 
 The joint hierarchy used for controlling skinned mesh pose is simply the glTF node hierarchy, with each node designated as a joint. The following example defines a joint hierarchy of two joints.
 
-**TODO: object-space VS world-space joints**
-
 For more details of vertex skinning, refer to [glTF Overview](figures/gltfOverview-0.2.0.png).
 
 ### Instantiation
@@ -3535,11 +3533,11 @@ This chunk must be padded with trailing zeros (`0x00`) to satisfy alignment requ
 
 # Appendix A: Tangent Space Recalculation
 
-**TODO**
+
 
 # Appendix B: BRDF Implementation
 
-**TODO**
+
 
 # Appendix C: Full Khronos Trademark Statement
 
