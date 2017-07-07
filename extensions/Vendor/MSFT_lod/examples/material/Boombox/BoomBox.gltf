@@ -221,7 +221,7 @@
                         "TEXCOORD_0": 3
                     },
                     "indices": 0,
-                    "material": 2,
+                    "material": 0,
                     "mode": 4
                 }
             ]
