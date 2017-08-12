@@ -41,7 +41,7 @@ The extension is added to the `textures` node and specifies a `source` property 
       "uri": "DDSTexture.dds"
     }
 ```
-When used in the glTF Binary .(glb) format the `images` node that points to the DDS file uses the `mimeType` value of *image/vnd-ms.dds*.
+When used in the glTF Binary (.glb) format the `images` node that points to the DDS file uses the `mimeType` value of *image/vnd-ms.dds*.
 
 ```json
 "textures": [
