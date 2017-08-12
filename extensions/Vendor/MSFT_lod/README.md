@@ -38,6 +38,9 @@ The following example shows how the `MSFT_lod` extension can be specified at the
                      "ids": [ 1, 2 ]
                 }
             },
+            "extras": {
+                    "MSFT_screencoverage": [ 0.5, 0.2 , 0.01]
+            }
         },
         {
             "name": "Medium_LOD",
@@ -50,7 +53,16 @@ The following example shows how the `MSFT_lod` extension can be specified at the
     ]
  ```
  Since the `MSFT_lod` extension is specified in `node[0]`, it becomes the highest LOD. The first element in the `ids` array is *1*, making `node[1]` the next lower LOD (or the *Medium_LOD*). The second element in the `ids` array is *2*, making `node[2]` the lowest LOD for this sample. 
-        
+
+The `MSFT_screencoverage` metadata values specified in `extras` can be used along with the `MSFT_lod` extension as a hint to determine the switching threshold for the various LODs.
+
+In the example above the screen coverage values can be used as follows:
+
+- LOD0 Rendered from 1.0 to 0.5
+- LOD1 Rendered from 0.5 to 0.2
+- LOD2 Rendered from 0.2 to 0.01
+- Nothing rendered from 0.01 – 0
+
 A similar pattern can be followed to create `material` LODs: 
 ```json
 "materials": [
@@ -99,9 +111,8 @@ If both node level and material level LODs are specified then the material level
 
 ## Known Implementations
 
-* Work in Progress: (BabylonJS)[https://github.com/BabylonJS/Babylon.js/tree/master/loaders/src/glTF] has support for `MSFT_lod` extension defined at the material level. The current implementation progressively loads each material LOD to improve the initial load time of the asset. This will be updated to support switching LODs based on render distance and support for `node` level LODs.
-
-A demo of the progressive loading based on LODs can found here: https://sbtron.github.io/BabylonJS-glTFLoader/?model=BoomBoxLOD 
+* [BabylonJS](https://github.com/BabylonJS/Babylon.js/tree/master/loaders/src/glTF) has support for `MSFT_lod` extension defined at the material level. The current implementation progressively loads each material LOD to improve the initial load time of the asset. This will be updated to support switching LODs based on render distance and support for `node` level LODs. A demo of the progressive loading based on LODs can found [here](https://sbtron.github.io/BabylonJS-glTFLoader/?model=BoomBoxLOD). 
+* Windows Mixed Reality Home and 3D Launchers for Windows Mixed Reality use `MSFT_lod` at the `node` level to support switching LODs based on the render distance.
 
 ## Resources
 
