@@ -90,7 +90,7 @@ The example below shows how this extension can be used along with the MSFT_textu
             }
         },
         {
-            "name":"MSFT_packing_ext_normal",
+            "name":"normalTexture_RG",
             "extensions": {
                 "MSFT_texture_dds": {
                     "source": 5
@@ -132,5 +132,5 @@ The example below shows how this extension can be used along with the MSFT_textu
 ```
 ## Known Implementations
 
-This extension is used by Windows Mixed Reality Home and 3D Launchers for Windows Mixed Reality to improve performance by using the specially packed textures. 
+This extension is used by Windows Mixed Reality Home and 3D Launchers for Windows Mixed Reality to improve performance by using the specially packed textures. [glTF-Toolkit](https://github.com/Microsoft/glTF-Toolkit) can be used to generate files that use this extension.
 
