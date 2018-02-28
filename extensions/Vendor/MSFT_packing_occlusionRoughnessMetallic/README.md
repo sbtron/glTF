@@ -37,7 +37,7 @@ The example below shows how this extension can be used along with the MSFT_textu
                 "baseColorTexture": {
                     "index": 0
                 },
-                "roughnessMetallicTexture": {
+                "metallicRoughnessTexture": {
                 "index": 1
                 },
             },
@@ -70,7 +70,7 @@ The example below shows how this extension can be used along with the MSFT_textu
             }
         },
         {
-            "name":"roughnessMetallicTexture",
+            "name":"metallicRoughnessTexture",
             "source":1
         },
         {
